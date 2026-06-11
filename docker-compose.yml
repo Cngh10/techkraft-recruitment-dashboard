@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  backend:
+    build: ./backend
+    container_name: techkraft2-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+      - db-data:/app/data
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/techkraft2.db
+    networks:
+      - techkraft-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build: ./frontend
+    container_name: techkraft2-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - techkraft-net
+
+networks:
+  techkraft-net:
+    driver: bridge
+
+volumes:
+  db-data:
